@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Homework1</string>
+    <string-array name="sysinfo">
+        <item>모델 번호</item>
+        <item>안드로이드 sdk 버전</item>
+        <item>안드로이드 보안 패치 수준</item>
+        <item>기본 보드의 이름</item>
+        <item>시스템 부트 로더 버전 번호</item>
+        <item>제품 하드웨어와 관련된 브랜드</item>
+        <item>디자인 이름</item>
+        <item>빌드 번호</item>
+        <item>빌드를 고유하게 식별하는 문자열</item>
+        <item>하드웨어 명</item>
+        <item>빌드 ID 또는 레이블</item>
+        <item>제품/하드웨어 제조업체</item>
+        <item>전체 제품의 이름</item>
+        <item>빌드를 설명하는 쉼표로 구분 된 태그</item>
+        <item>\'사용자\'또는 \'eng\'와 같은 빌드 유형</item>
+        <item>현재의 개발 코드네임을 리턴</item>
+        <item>사용자에게 보여지는 프레임워크의 sdk버전</item>
+        <item>기본 소스 제어에 의해 사용되는 해당 빌드의 대표하는 내부 값</item>
+        <item>커널 버전</item>
+    </string-array>
+
+</resources>
