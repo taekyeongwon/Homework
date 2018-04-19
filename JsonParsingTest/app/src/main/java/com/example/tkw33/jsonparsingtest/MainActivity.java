@@ -2,12 +2,11 @@ package com.example.tkw33.jsonparsingtest;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -49,9 +48,8 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(s);
             StringBuffer sb = new StringBuffer();
             try{
-                JSONObject json = new JSONObject();
-
-                JSONArray rows = json.getJSONArray(s);
+                //JSONObject json = new JSONObject();
+                JSONArray rows = new JSONArray(s);
                 int length = rows.length();
                 for(int i = 0; i<length; i++){
                     JSONObject result = (JSONObject) rows.get(i);

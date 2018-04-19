@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.Buffer;
 
 public class Remote {
     private static final String TAG = "ResponseCode : ";
@@ -16,6 +15,10 @@ public class Remote {
         URL url = new URL(webURL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(3000);
+        //conn.setUseCaches(false);
+        //conn.setDefaultUseCaches(false);
         int responseCode = conn.getResponseCode();
 
         if(responseCode == HttpURLConnection.HTTP_OK){
