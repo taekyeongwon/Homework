@@ -5,6 +5,7 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 
 public class Remote {
@@ -15,8 +16,9 @@ public class Remote {
         URL url = new URL(webURL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        conn.setConnectTimeout(3000);
-        conn.setReadTimeout(3000);
+        conn.setConnectTimeout(500);
+        conn.setReadTimeout(500);
+
         //conn.setUseCaches(false);
         //conn.setDefaultUseCaches(false);
         int responseCode = conn.getResponseCode();
