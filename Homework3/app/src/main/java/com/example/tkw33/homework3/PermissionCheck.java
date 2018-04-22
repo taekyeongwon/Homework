@@ -2,7 +2,6 @@ package com.example.tkw33.homework3;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -30,6 +29,10 @@ public class PermissionCheck extends AppCompatActivity{
             }
             ActivityCompat.requestPermissions(context, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
                     MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            MapActivity.permission = false;
+        }
+        else {
+            MapActivity.permission = true;
         }
     }
 }

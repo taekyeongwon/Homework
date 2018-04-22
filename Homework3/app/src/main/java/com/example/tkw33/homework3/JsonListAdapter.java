@@ -20,6 +20,7 @@ public class JsonListAdapter extends ArrayAdapter<JsonItemData> {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         ViewHolder viewHolder;
+
         JsonItemData[] data = JsonItemData.jsonDataArray;
         if(convertView == null) {
             LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);

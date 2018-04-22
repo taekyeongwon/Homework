@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import static com.kakao.util.maps.helper.Utility.getPackageInfo;
 
 public class GetHashKey {
+    public static final String AppKey = "f4e3a228a169ced1063495a42711d190";
     public static String myKey(final Context context) {
         PackageInfo packageInfo = getPackageInfo(context, PackageManager.GET_SIGNATURES);
         if (packageInfo == null)
