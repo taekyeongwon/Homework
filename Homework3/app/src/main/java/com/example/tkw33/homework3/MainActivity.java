@@ -44,10 +44,6 @@ public class MainActivity extends ListActivity{
         mapIntent.putExtra("Index", position);
         startActivity(mapIntent);
     }
-    public void taskRestart(){
-            parsingActivity = new ParsingActivity();
-            parsingActivity.execute();
-    }
     public class ParsingActivity extends AsyncTask<Void, Void, String> {
         String purpose, numberOfCameras, pixelOfCameras, agencyName, streetNameAddress;
         String latitude, longitude;
@@ -95,22 +91,18 @@ public class MainActivity extends ListActivity{
         }
 
         @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            Log.d("Canceled","this task is canceled");
-        }
-
-        @Override
         protected String doInBackground(Void... voids) {
             String result = "";
-            try {
-                result =
-                        Remote.getData("http://api.data.go.kr/openapi/cctv-std?serviceKey=dmEedXgq4BTNi2NWl8xAAB05tSi7m6F5IdcxwpCWtgK7s%2FQ%2BQHM0floAgPXauZca%2BXhrm%2F6wkiuCn5956y54PQ%3D%3D&s_page=1&s_list=10&type=json");
-            }
-            catch ( Exception e ){
-                Log.d("Timeout Exception", e.toString());
-                cancel(true);
-                taskRestart();
+            boolean except = true;
+            while(except != false) {
+                try {
+                    result =
+                            Remote.getData("http://api.data.go.kr/openapi/cctv-std?serviceKey=dmEedXgq4BTNi2NWl8xAAB05tSi7m6F5IdcxwpCWtgK7s%2FQ%2BQHM0floAgPXauZca%2BXhrm%2F6wkiuCn5956y54PQ%3D%3D&s_page=1&s_list=10&type=json");
+                    except = false;
+                } catch (Exception e) {
+                    Log.d("Timeout Exception", e.toString());
+                    except = true;
+                }
             }
             return result;
         }

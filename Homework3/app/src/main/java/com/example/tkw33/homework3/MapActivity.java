@@ -46,6 +46,7 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
                 }
                 if (permission == true) {
                     mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading);
+
                 }
             }
         });
@@ -66,12 +67,12 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
 
         mapView.addPOIItem(marker);
-        mapView.setMapCenterPointAndZoomLevel(geoCoordinate, 9, true);
+        //mapView.setMapCenterPointAndZoomLevel(geoCoordinate, 9, true);
     }
 
     @Override
     public void onMapViewInitialized(MapView mapView) {
-
+        mapView.setMapCenterPointAndZoomLevel(geoCoordinate, 9, true);
     }
 
     @Override
