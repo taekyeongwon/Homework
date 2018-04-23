@@ -106,7 +106,7 @@ public class MainActivity extends ListActivity{
             String result = "";
             try {
                 result =
-                        Remote.getData("http://api.data.go.kr/openapi/cctv-std?serviceKey=hhHIleO3oGtNT85BxGLDZAvCM8fgqrCmr4MNymfVVnAovNwe36pZaSUf7pCfLzr32yBH61D43ZtvuNBgD%2Bx7PA%3D%3D&s_page=1&s_list=100&type=json");
+                        Remote.getData("http://api.data.go.kr/openapi/cctv-std?serviceKey=dmEedXgq4BTNi2NWl8xAAB05tSi7m6F5IdcxwpCWtgK7s%2FQ%2BQHM0floAgPXauZca%2BXhrm%2F6wkiuCn5956y54PQ%3D%3D&s_page=1&s_list=100&type=json");
             }
             catch ( Exception e ){
                 Log.d("Timeout Exception", e.toString());

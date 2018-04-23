@@ -24,7 +24,7 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     JsonItemData[] mData;
     ImageButton bt_current_loaction;
     RelativeLayout container;
-    static boolean permission = false;
+    static boolean permission = true;
     //MapPoint mapPoint;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -122,7 +122,6 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
 
     @Override
     public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem) {
-
         Log.d("onCalloutBalloon", "POIItem Touched");
     }
 
@@ -163,11 +162,12 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
             case 1 : {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d("onRequestResult granted", "result granted");
-                    Toast.makeText(this, "result granted", Toast.LENGTH_SHORT).show();
+                    mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading);
+                    //Toast.makeText(this, "result granted", Toast.LENGTH_SHORT).show();
                     bt_current_loaction.setEnabled(true);
                 } else {
                     Log.d("onRequestResult denied", "result denied");
-                    Toast.makeText(this, "result denied", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, "result denied", Toast.LENGTH_SHORT).show();
                     bt_current_loaction.setEnabled(false);
                 }
                 return;

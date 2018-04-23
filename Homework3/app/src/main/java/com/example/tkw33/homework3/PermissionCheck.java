@@ -22,10 +22,10 @@ public class PermissionCheck extends AppCompatActivity{
         if(ContextCompat.checkSelfPermission(context, permission)
                 != PackageManager.PERMISSION_GRANTED) {
             if(ActivityCompat.shouldShowRequestPermissionRationale(context, permission)) {
-                Toast.makeText(context, "permission denied", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(context, "permission denied", Toast.LENGTH_SHORT).show();
             }
             else {
-                Toast.makeText(context, "don't show message again", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(context, "don't show message again", Toast.LENGTH_SHORT).show();
             }
             ActivityCompat.requestPermissions(context, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
                     MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);

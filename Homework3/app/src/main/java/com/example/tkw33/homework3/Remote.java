@@ -14,8 +14,8 @@ public class Remote {
         URL url = new URL(webURL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        conn.setConnectTimeout(1000);
-        conn.setReadTimeout(1000);
+        conn.setConnectTimeout(2000);
+        conn.setReadTimeout(2000);
 
         int responseCode = conn.getResponseCode();
 
