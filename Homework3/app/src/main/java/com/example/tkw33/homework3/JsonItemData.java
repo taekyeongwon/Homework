@@ -24,12 +24,10 @@ public class JsonItemData {
         try {
             jsonDataArray[i] = new JsonItemData(getPurpose(), getNumberOfCameras(), getPixelOfCameras(),
                     getAgencyName(), getStreetNameAddress(), getLatitude(), getLongitude());
-            if(i < MainActivity.arrayLength-1)  //이 if문 없으면 ArrayIndexOutOfBoundsException 발생. 왜 발생하는지?
-                i++;
+            i++;
         }
         catch (ArrayIndexOutOfBoundsException e) {
             Log.d("ArrayIndexOutOfBounds", e.toString()+" exception!");
-            Log.d("index", ""+i);
         }
     }
 
@@ -47,4 +45,5 @@ public class JsonItemData {
     public void setLatitude(double latitude){this.latitude = latitude;}
     public double getLongitude(){ return longitude; }
     public void setLongitude(double longitude){this.longitude = longitude;}
+
 }

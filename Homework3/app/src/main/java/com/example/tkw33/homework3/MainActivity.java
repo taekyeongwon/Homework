@@ -26,7 +26,6 @@ public class MainActivity extends ListActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("my hash key : ", GetHashKey.myKey(this));
-
         list_up_btn = (ImageButton) findViewById(R.id.list_up_btn);
         listView = (ListView) findViewById(android.R.id.list);
         parsingActivity = new ParsingActivity();
@@ -106,7 +105,7 @@ public class MainActivity extends ListActivity{
             String result = "";
             try {
                 result =
-                        Remote.getData("http://api.data.go.kr/openapi/cctv-std?serviceKey=dmEedXgq4BTNi2NWl8xAAB05tSi7m6F5IdcxwpCWtgK7s%2FQ%2BQHM0floAgPXauZca%2BXhrm%2F6wkiuCn5956y54PQ%3D%3D&s_page=1&s_list=100&type=json");
+                        Remote.getData("http://api.data.go.kr/openapi/cctv-std?serviceKey=dmEedXgq4BTNi2NWl8xAAB05tSi7m6F5IdcxwpCWtgK7s%2FQ%2BQHM0floAgPXauZca%2BXhrm%2F6wkiuCn5956y54PQ%3D%3D&s_page=1&s_list=10&type=json");
             }
             catch ( Exception e ){
                 Log.d("Timeout Exception", e.toString());
@@ -118,9 +117,13 @@ public class MainActivity extends ListActivity{
 
     }
 
-    /*@Override
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         Log.d("Destroy", "MainActivity destroyed");
-    }*/
+        System.exit(0);     //어플이 종료되어도 static영역의 JsonItemData.jsonDataArray는
+                                   //남아있기 때문에 다시 실행했을 때 ArrayIndexOutOfBoundsException 발생.
+                                   //따라서 앱이 Destroy 됐을 때 System.exit(0)로 프로세스를 종료시키고 모든 리소스를 반환.
+    }
+
 }
