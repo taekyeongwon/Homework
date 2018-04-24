@@ -54,7 +54,6 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
                 }
                 if (permissionCheck.isPermissionGranted == true) {
                     mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading);
-
                 }
             }
         });
@@ -87,7 +86,7 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
 
         mapView.addPOIItem(marker);
-        if(sp_list != null && ep_list != null){
+        if(sp_list.size() > 0 && ep_list.size() > 0){
             sp_address = sp_list.get(0);
             ep_address = ep_list.get(0);
 
@@ -105,6 +104,9 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
 
             mapView.addPOIItem(sp_marker);
             mapView.addPOIItem(ep_marker);
+        }
+        else {
+            Toast.makeText(this, "주소정보를 좌표로 변환할 수 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -165,16 +167,17 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         MapPolyline polyline = new MapPolyline();
         polyline.setLineColor(Color.argb(128, 255, 255, 0));
 
-        if(!mData.startPoint.equals(mData.endPoint)) {
-            polyline.addPoint(MapPoint.mapPointWithGeoCoord(sp_address.getLatitude(), sp_address.getLongitude()));
-            polyline.addPoint(MapPoint.mapPointWithGeoCoord(ep_address.getLatitude(), ep_address.getLongitude()));
-            mapView.addPolyline(polyline);
-            MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
-            int padding = 100;
-            mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding));
-        }
-        else {
-            Toast.makeText(this, "기점과 종점의 주소가 같습니다.", Toast.LENGTH_SHORT).show();
+        if(sp_address != null && ep_address != null) {
+            if (!mData.startPoint.equals(mData.endPoint)) {
+                polyline.addPoint(MapPoint.mapPointWithGeoCoord(sp_address.getLatitude(), sp_address.getLongitude()));
+                polyline.addPoint(MapPoint.mapPointWithGeoCoord(ep_address.getLatitude(), ep_address.getLongitude()));
+                mapView.addPolyline(polyline);
+                MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
+                int padding = 10;
+                mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding));
+            } else {
+                Toast.makeText(this, "기점과 종점의 주소가 같습니다.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

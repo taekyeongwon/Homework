@@ -18,7 +18,6 @@ public class Remote {
         conn.setReadTimeout(3000);
 
         int responseCode = conn.getResponseCode();
-
         if(responseCode == HttpURLConnection.HTTP_OK){
             BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             while( (dataLine = br.readLine()) != null ){

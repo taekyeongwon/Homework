@@ -34,8 +34,8 @@ public class MainActivity extends ListActivity {
         list_up_btn = (ImageButton) findViewById(R.id.list_up_btn);
         listView = (ListView) findViewById(android.R.id.list);
         //for(int i=0; i<10; i++) {
-            parsingActivity = new ParsingActivity();
-            parsingActivity.execute();
+        parsingActivity = new ParsingActivity();
+        parsingActivity.execute();
             //parsingActivity.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         //}
         list_up_btn.setOnClickListener(new View.OnClickListener() {
@@ -59,12 +59,28 @@ public class MainActivity extends ListActivity {
         String latitude, longitude;
         @Override
         protected void onPreExecute() {
-            super.onPreExecute();
+
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String result = "";
+            boolean except = true;
+            while(except != false) {
+                try {
+                    result =
+                            Remote.getData("http://openapi.seoul.go.kr:8088/5276627355746b773636514879674c/json/SdeTlSprdManageW/1/1000/");
+                    except = false;
+                } catch (Exception e) {
+                    Log.d("Timeout Exception", e.toString());
+                    except = true;
+                }
+            }
+            return result;
         }
 
         @Override
         protected void onPostExecute(String data) {
-            super.onPostExecute(data);
             try{
                 long start, end;
                 start = System.currentTimeMillis();
@@ -100,7 +116,7 @@ public class MainActivity extends ListActivity {
                     jsonItemArray[i].longitude = Double.parseDouble(longitude);
 
                 }
-                JsonListAdapter listAdapter = new JsonListAdapter(MainActivity.this, jsonItemArray);
+                ListAdapter listAdapter = new JsonListAdapter(MainActivity.this, jsonItemArray);
                 setListAdapter(listAdapter);
 
                 end = System.currentTimeMillis();
@@ -108,23 +124,6 @@ public class MainActivity extends ListActivity {
                 Log.d("CurrentTimeMillis", "time : "+(end - start)/1000.0);
 
             } catch (JSONException e) {e.printStackTrace();}
-        }
-
-        @Override
-        protected String doInBackground(Void... voids) {
-            String result = "";
-            boolean except = true;
-            while(except != false) {
-                try {
-                    result =
-                            Remote.getData("http://openapi.seoul.go.kr:8088/5276627355746b773636514879674c/json/SdeTlSprdManageW/1/1000/");
-                    except = false;
-                } catch (Exception e) {
-                    Log.d("Timeout Exception", e.toString());
-                    except = true;
-                }
-            }
-            return result;
         }
 
     }
