@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -22,7 +23,7 @@ import org.json.JSONObject;
 public class MainActivity extends ListActivity {
 
     ListView listView;
-    ParsingActivity parsingActivity;
+    ParsingTask parsingTask;
     ImageButton list_up_btn;
     JsonItemData[] jsonItemArray;
     //static double tIndex = 0.0;
@@ -34,8 +35,8 @@ public class MainActivity extends ListActivity {
         list_up_btn = (ImageButton) findViewById(R.id.list_up_btn);
         listView = (ListView) findViewById(android.R.id.list);
         //for(int i=0; i<10; i++) {
-        parsingActivity = new ParsingActivity();
-        parsingActivity.execute();
+        parsingTask = new ParsingTask();
+        parsingTask.execute();
             //parsingActivity.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         //}
         list_up_btn.setOnClickListener(new View.OnClickListener() {
@@ -54,7 +55,8 @@ public class MainActivity extends ListActivity {
         mapIntent.putExtra("JsonData", jsonItemData);
         startActivity(mapIntent);
     }
-    public class ParsingActivity extends AsyncTask<Void, Void, String> {
+
+    public class ParsingTask extends AsyncTask<Void, Void, String> {
         String roadName, roadNameCode, englishRoadName, startPoint, endPoint;
         String latitude, longitude;
         @Override

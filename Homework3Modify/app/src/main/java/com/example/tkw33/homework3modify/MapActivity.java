@@ -26,7 +26,8 @@ import net.daum.mf.map.api.MapView;
 import java.io.IOException;
 import java.util.List;
 
-public class MapActivity extends FragmentActivity implements MapView.MapViewEventListener, MapView.POIItemEventListener, MapView.CurrentLocationEventListener{
+public class MapActivity extends FragmentActivity implements MapView.MapViewEventListener,
+        MapView.POIItemEventListener, MapView.CurrentLocationEventListener{
 
     MapView mapView;
     MapPoint geoCoordinate;
@@ -53,7 +54,8 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
                     permissionCheck.requestPermission();
                 }
                 if (permissionCheck.isPermissionGranted == true) {
-                    mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading);
+                    mapView.setCurrentLocationTrackingMode(MapView.
+                            CurrentLocationTrackingMode.TrackingModeOnWithoutHeading);
                 }
             }
         });
