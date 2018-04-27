@@ -71,7 +71,7 @@ public class MainActivity extends ListActivity {
             while(except != false) {
                 try {
                     result =
-                            Remote.getData("http://openapi.seoul.go.kr:8088/5276627355746b773636514879674c/json/SdeTlSprdManageW/1/1000/");
+                            Remote.getData("http://openapi.seoul.go.kr:8088/5276627355746b773636514879674c/json/SdeTlSprdManageW/1/100/");
                     except = false;
                 } catch (Exception e) {
                     Log.d("Timeout Exception", e.toString());

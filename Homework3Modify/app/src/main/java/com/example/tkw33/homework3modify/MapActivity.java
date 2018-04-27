@@ -1,11 +1,14 @@
 package com.example.tkw33.homework3modify;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,6 +19,7 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import net.daum.android.map.coord.MapCoordLatLng;
 import net.daum.mf.map.api.CameraUpdateFactory;
 import net.daum.mf.map.api.MapPOIItem;
 import net.daum.mf.map.api.MapPoint;
@@ -23,8 +27,19 @@ import net.daum.mf.map.api.MapPointBounds;
 import net.daum.mf.map.api.MapPolyline;
 import net.daum.mf.map.api.MapView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MapActivity extends FragmentActivity implements MapView.MapViewEventListener,
         MapView.POIItemEventListener, MapView.CurrentLocationEventListener{
@@ -36,6 +51,11 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     RelativeLayout container;
     List<Address> sp_list = null, ep_list = null;
     Address sp_address = null, ep_address = null;
+    boolean isGranted = false;
+    public static Context mContext;
+    List<LatLng> jeju_node = new ArrayList<>();
+    boolean isLongTouched = false;
+    MapPoint[] findNode = new MapPoint[2];
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +73,8 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
                 if(Build.VERSION.SDK_INT >= 23) {
                     permissionCheck.requestPermission();
                 }
-                if (permissionCheck.isPermissionGranted == true) {
+                //if (permissionCheck.isPermissionGranted == true) {
+                if (isGranted != false) {
                     mapView.setCurrentLocationTrackingMode(MapView.
                             CurrentLocationTrackingMode.TrackingModeOnWithoutHeading);
                 }
@@ -69,6 +90,75 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         geoCoding();
         createMarker(mapView);
         container.addView(mapView);
+        mContext = this;
+
+        for(int page=1; page<=30; page++) {
+            try {
+                GeoJsonParsing geoJson = new GeoJsonParsing();
+                //geoJson.execute(1);
+                geoJson.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, page);
+                Thread.sleep(100);
+            }catch (Exception e){e.printStackTrace();}
+        }
+    }
+    public void GeoJsonResult(List<LatLng> list){
+        /*int i=0;
+        MapPOIItem node_marker[] = new MapPOIItem[list.size()];
+        MapPOIItem node;
+        //MapView mapView = this.mapView;
+        while(i<list.size()) {
+            node = new MapPOIItem();
+            node.setItemName(String.valueOf(i));
+            node.setMapPoint(MapPoint.mapPointWithGeoCoord(list.get(i).latitude, list.get(i).longitude));
+            node.setMarkerType(MapPOIItem.MarkerType.BluePin);
+            node.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
+            node_marker[i++] = node;
+        }
+        mapView.addPOIItems(node_marker);*/
+        //synchronized (this) {
+            for (int index = 0; index < list.size(); index++)
+                jeju_node.add(list.get(index));
+        //}
+        //jeju_node = list;
+    }
+    public void startFindRoute(){
+        int i=0, j=0;
+        float min=0;
+        float weight = 0;
+        int minIndex=0;
+
+        float[] minWeight = new float[jeju_node.size()];
+        //for(int log=0; log<jeju_node.size(); log++)
+           // Log.d("JEJU_NODE",""+jeju_node.get(0).latitude+""+log);
+        for(i=0; i<jeju_node.size(); i++) {
+            Location locationS = new Location("point A");
+            locationS.setLatitude(findNode[0].getMapPointGeoCoord().latitude);
+            locationS.setLongitude(findNode[0].getMapPointGeoCoord().longitude);
+
+            Location locationN = new Location("point B");
+            locationN.setLatitude(jeju_node.get(i).latitude);
+            locationN.setLongitude(jeju_node.get(i).longitude);
+
+            minWeight[i] = locationS.distanceTo(locationN);
+
+        }
+        min = minWeight[0];
+        for(j=0; j<i; j++){
+            if(min>minWeight[j]) {
+                min = minWeight[j];
+                minIndex = j;
+            }
+        }
+        Log.d("Distance", " : "+min);
+        MapPolyline polyline = new MapPolyline();
+        polyline.setLineColor(Color.argb(128, 255, 255, 0));
+
+        polyline.addPoint(MapPoint.mapPointWithGeoCoord(findNode[0].getMapPointGeoCoord().latitude, findNode[0].getMapPointGeoCoord().longitude));
+        polyline.addPoint(MapPoint.mapPointWithGeoCoord(jeju_node.get(minIndex).latitude, jeju_node.get(minIndex).longitude));
+        mapView.addPolyline(polyline);
+        MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
+        int padding = 100;
+        mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding));
     }
     public void geoCoding(){
         final Geocoder geocoder = new Geocoder(this);
@@ -140,6 +230,27 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     @Override
     public void onMapViewLongPressed(MapView mapView, MapPoint mapPoint) {
 
+        if(isLongTouched == false) {
+            MapPOIItem sp_marker = new MapPOIItem();
+            sp_marker.setItemName("출발지");
+            sp_marker.setMapPoint(mapPoint);
+            sp_marker.setMarkerType(MapPOIItem.MarkerType.CustomImage);
+            sp_marker.setCustomImageResourceId(R.drawable.spin);
+            isLongTouched = true;
+            mapView.addPOIItem(sp_marker);
+            findNode[0] = mapPoint;
+        }
+        else {
+            MapPOIItem ep_marker = new MapPOIItem();
+            ep_marker.setItemName("도착지");
+            ep_marker.setMapPoint(mapPoint);
+            ep_marker.setMarkerType(MapPOIItem.MarkerType.CustomImage);
+            ep_marker.setCustomImageResourceId(R.drawable.epin);
+            isLongTouched = false;
+            mapView.addPOIItem(ep_marker);
+            findNode[1] = mapPoint;
+            startFindRoute();
+        }
     }
 
     @Override
@@ -175,7 +286,7 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
                 polyline.addPoint(MapPoint.mapPointWithGeoCoord(ep_address.getLatitude(), ep_address.getLongitude()));
                 mapView.addPolyline(polyline);
                 MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
-                int padding = 10;
+                int padding = 100;
                 mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding));
             } else {
                 Toast.makeText(this, "기점과 종점의 주소가 같습니다.", Toast.LENGTH_SHORT).show();
@@ -222,10 +333,12 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
                     Log.d("onRequestResult granted", "result granted");
                     mapView.setCurrentLocationTrackingMode(MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading);
                     //Toast.makeText(this, "result granted", Toast.LENGTH_SHORT).show();
+                    isGranted = true;
                     bt_current_loaction.setEnabled(true);
                 } else {
                     Log.d("onRequestResult denied", "result denied");
                     //Toast.makeText(this, "result denied", Toast.LENGTH_SHORT).show();
+                    isGranted = false;
                     bt_current_loaction.setEnabled(false);
                 }
                 return;

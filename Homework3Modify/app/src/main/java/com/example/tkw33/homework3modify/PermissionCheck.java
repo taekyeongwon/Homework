@@ -14,7 +14,6 @@ public class PermissionCheck extends AppCompatActivity {
 
     private Activity context;
     private String permission;
-    public boolean isPermissionGranted = true;
     public PermissionCheck(Activity context, String permission){
         this.context = context;
         this.permission = permission;
@@ -31,10 +30,6 @@ public class PermissionCheck extends AppCompatActivity {
             }
             ActivityCompat.requestPermissions(context, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
                     MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
-            isPermissionGranted = false;
-        }
-        else {
-            isPermissionGranted = true;
         }
     }
 }
