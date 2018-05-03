@@ -1,4 +1,4 @@
-package com.example.tkw33.homework3modify;
+package com.example.tkw33.homework3modify.GeoJson;
 
 public class LatLng {
     public double latitude;

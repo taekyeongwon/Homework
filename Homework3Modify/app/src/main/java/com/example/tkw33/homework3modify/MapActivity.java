@@ -2,13 +2,12 @@ package com.example.tkw33.homework3modify;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -19,7 +18,12 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import net.daum.android.map.coord.MapCoordLatLng;
+import com.example.tkw33.homework3modify.DB.DBHelper;
+import com.example.tkw33.homework3modify.DB.ParsingData;
+import com.example.tkw33.homework3modify.GeoJson.DoLinkGeoJsonParsing;
+import com.example.tkw33.homework3modify.GeoJson.LatLng;
+import com.example.tkw33.homework3modify.GeoJson.LinkLatLng;
+
 import net.daum.mf.map.api.CameraUpdateFactory;
 import net.daum.mf.map.api.MapPOIItem;
 import net.daum.mf.map.api.MapPoint;
@@ -27,19 +31,9 @@ import net.daum.mf.map.api.MapPointBounds;
 import net.daum.mf.map.api.MapPolyline;
 import net.daum.mf.map.api.MapView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class MapActivity extends FragmentActivity implements MapView.MapViewEventListener,
         MapView.POIItemEventListener, MapView.CurrentLocationEventListener{
@@ -53,9 +47,13 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     Address sp_address = null, ep_address = null;
     boolean isGranted = false;
     public static Context mContext;
-    List<LatLng> jeju_node = new ArrayList<>();
+    //List<LatLng> jeju_node = new ArrayList<>();
+    ArrayList<ParsingData> jeju_link = new ArrayList<>();
     boolean isLongTouched = false;
     MapPoint[] findNode = new MapPoint[2];
+
+    DBHelper dbHelper;
+    double timeAvg = 0.0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,22 +85,43 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         mapView.setPOIItemEventListener(this);
         mapView.setCurrentLocationEventListener(this);
 
+        dbHelper = new DBHelper(MapActivity.this, "homework3.db", null, 1);
+        jeju_link = dbHelper.getDBData();
         geoCoding();
         createMarker(mapView);
         container.addView(mapView);
         mContext = this;
 
-        for(int page=1; page<=30; page++) {
-            try {
-                GeoJsonParsing geoJson = new GeoJsonParsing();
-                //geoJson.execute(1);
-                geoJson.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, page);
-                Thread.sleep(100);
-            }catch (Exception e){e.printStackTrace();}
+    }
+
+    public void getDistance(ArrayList<ParsingData> link){
+        String link_id;
+        for(int i=0; i<link.size(); i++) {
+            link_id = link.get(i).link_id;
+            for (int j = 0; j < link.size(); j++) {
+                if (link_id == link.get(j + 1).link_id){
+                    Location locationS = new Location("point A");
+                    locationS.setLatitude(Double.parseDouble(link.get(j).slat));
+                    locationS.setLongitude(Double.parseDouble(link.get(j).slng));
+
+                    Location locationE = new Location("point B");
+                    locationE.setLatitude(Double.parseDouble(link.get(j).elat));
+                    locationE.setLongitude(Double.parseDouble(link.get(j).elng));
+
+                    //link.get(j).setDist(locationS.distanceTo(locationE));
+                    Log.d("DISTANCE", " "+locationS.distanceTo(locationE));
+                }
+            }
         }
     }
-    public void GeoJsonResult(List<LatLng> list){
-        /*int i=0;
+    /*public void GeoJsonResultOfLink(List<LinkLatLng> list){
+        //jeju_link = list;
+        for(int index = 0; index < list.size(); index++){
+            jeju_link.add(list.get(index));
+        }
+    }
+    public void GeoJsonResultOfNode(List<LatLng> list){
+        //int i=0;
         MapPOIItem node_marker[] = new MapPOIItem[list.size()];
         MapPOIItem node;
         //MapView mapView = this.mapView;
@@ -114,22 +133,23 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
             node.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
             node_marker[i++] = node;
         }
-        mapView.addPOIItems(node_marker);*/
+        mapView.addPOIItems(node_marker);//
         //synchronized (this) {
             for (int index = 0; index < list.size(); index++)
                 jeju_node.add(list.get(index));
+            //for(int index = 0; index<list2.size(); index++)
+                //jeju_link.add(list2.get(index));
         //}
         //jeju_node = list;
-    }
+    }*/
     public void startFindRoute(){
+        getDistance(jeju_link);
         int i=0, j=0;
         float min=0;
         float weight = 0;
         int minIndex=0;
 
-        float[] minWeight = new float[jeju_node.size()];
-        //for(int log=0; log<jeju_node.size(); log++)
-           // Log.d("JEJU_NODE",""+jeju_node.get(0).latitude+""+log);
+        /*float[] minWeight = new float[jeju_node.size()];
         for(i=0; i<jeju_node.size(); i++) {
             Location locationS = new Location("point A");
             locationS.setLatitude(findNode[0].getMapPointGeoCoord().latitude);
@@ -149,16 +169,25 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
                 minIndex = j;
             }
         }
-        Log.d("Distance", " : "+min);
+        Log.d("NumberOfNodes", " : "+jeju_node.size());
+        Log.d("NumberOfLinks", ""+jeju_link.size());
+        Log.d("LinkGeo", jeju_link.get(0).linkLineLat+", "+jeju_link.get(0).linkLineLng);
         MapPolyline polyline = new MapPolyline();
         polyline.setLineColor(Color.argb(128, 255, 255, 0));
 
         polyline.addPoint(MapPoint.mapPointWithGeoCoord(findNode[0].getMapPointGeoCoord().latitude, findNode[0].getMapPointGeoCoord().longitude));
         polyline.addPoint(MapPoint.mapPointWithGeoCoord(jeju_node.get(minIndex).latitude, jeju_node.get(minIndex).longitude));
         mapView.addPolyline(polyline);
-        MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
-        int padding = 100;
-        mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding));
+        //MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
+        //int padding = 100;
+        //mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding));
+
+            MapPolyline polyline2 = new MapPolyline();
+            polyline2.setLineColor(Color.argb(128, 0, 255, 255));
+            polyline2.addPoint(MapPoint.mapPointWithGeoCoord(jeju_link.get(0).linkLineLat, jeju_link.get(0).linkLineLng));
+            polyline2.addPoint(MapPoint.mapPointWithGeoCoord(jeju_link.get(0).linkLineLat2, jeju_link.get(0).linkLineLng2));
+            mapView.addPolyline(polyline2);
+            */
     }
     public void geoCoding(){
         final Geocoder geocoder = new Geocoder(this);
@@ -231,6 +260,7 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     public void onMapViewLongPressed(MapView mapView, MapPoint mapPoint) {
 
         if(isLongTouched == false) {
+            mapView.removeAllPOIItems();
             MapPOIItem sp_marker = new MapPOIItem();
             sp_marker.setItemName("출발지");
             sp_marker.setMapPoint(mapPoint);

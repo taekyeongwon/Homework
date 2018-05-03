@@ -2,6 +2,7 @@ package com.example.tkw33.homework3modify;
 
 import android.app.ListActivity;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,11 +10,15 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
+
+import com.example.tkw33.homework3modify.DB.DBHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,24 +31,36 @@ public class MainActivity extends ListActivity {
     ParsingTask parsingTask;
     ImageButton list_up_btn;
     JsonItemData[] jsonItemArray;
-    //static double tIndex = 0.0;
+    Button download_btn;
+    DBHelper dbHelper = null;
+    SQLiteDatabase database;
+    ProgressBar pb;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("MyHashKey : ", GetHashKey.myKey(this));
         list_up_btn = (ImageButton) findViewById(R.id.list_up_btn);
+        download_btn = (Button) findViewById(R.id.download_btn);
         listView = (ListView) findViewById(android.R.id.list);
-        //for(int i=0; i<10; i++) {
+        pb = (ProgressBar) findViewById(R.id.pb);
+
         parsingTask = new ParsingTask();
         parsingTask.execute();
-            //parsingActivity.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        //}
         list_up_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 listView.setSelectionFromTop(0, 0);
-                //Toast.makeText(MainActivity.this, "avg time "+tIndex/10.0, Toast.LENGTH_LONG).show();
+            }
+        });
+        download_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(dbHelper == null) {
+                    dbHelper = new DBHelper(MainActivity.this, "homework3.db", null, 1);
+                    database = dbHelper.getWritableDatabase();
+                }
+
             }
         });
     }
@@ -122,7 +139,6 @@ public class MainActivity extends ListActivity {
                 setListAdapter(listAdapter);
 
                 end = System.currentTimeMillis();
-                //tIndex += (end-start)/1000.0;
                 Log.d("CurrentTimeMillis", "time : "+(end - start)/1000.0);
 
             } catch (JSONException e) {e.printStackTrace();}
