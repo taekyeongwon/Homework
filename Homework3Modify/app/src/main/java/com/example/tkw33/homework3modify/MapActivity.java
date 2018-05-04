@@ -10,6 +10,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -53,6 +54,7 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     MapPoint[] findNode = new MapPoint[2];
 
     DBHelper dbHelper;
+    SQLiteDatabase db;
     double timeAvg = 0.0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,9 +68,9 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         bt_current_loaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                PermissionCheck permissionCheck = new PermissionCheck(MapActivity.this,
-                        Manifest.permission.ACCESS_FINE_LOCATION);
                 if(Build.VERSION.SDK_INT >= 23) {
+                    PermissionCheck permissionCheck = new PermissionCheck(MapActivity.this,
+                            "location");
                     permissionCheck.requestPermission();
                 }
                 //if (permissionCheck.isPermissionGranted == true) {
@@ -85,7 +87,9 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         mapView.setPOIItemEventListener(this);
         mapView.setCurrentLocationEventListener(this);
 
-        dbHelper = new DBHelper(MapActivity.this, "homework3.db", null, 1);
+        dbHelper = new DBHelper(MapActivity.this,
+                "homework3.db", null, 1);
+        db = dbHelper.getReadableDatabase();
         jeju_link = dbHelper.getDBData();
         geoCoding();
         createMarker(mapView);
@@ -94,26 +98,6 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
 
     }
 
-    public void getDistance(ArrayList<ParsingData> link){
-        String link_id;
-        for(int i=0; i<link.size(); i++) {
-            link_id = link.get(i).link_id;
-            for (int j = 0; j < link.size(); j++) {
-                if (link_id == link.get(j + 1).link_id){
-                    Location locationS = new Location("point A");
-                    locationS.setLatitude(Double.parseDouble(link.get(j).slat));
-                    locationS.setLongitude(Double.parseDouble(link.get(j).slng));
-
-                    Location locationE = new Location("point B");
-                    locationE.setLatitude(Double.parseDouble(link.get(j).elat));
-                    locationE.setLongitude(Double.parseDouble(link.get(j).elng));
-
-                    //link.get(j).setDist(locationS.distanceTo(locationE));
-                    Log.d("DISTANCE", " "+locationS.distanceTo(locationE));
-                }
-            }
-        }
-    }
     /*public void GeoJsonResultOfLink(List<LinkLatLng> list){
         //jeju_link = list;
         for(int index = 0; index < list.size(); index++){
@@ -143,7 +127,7 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         //jeju_node = list;
     }*/
     public void startFindRoute(){
-        getDistance(jeju_link);
+        //getDistance(jeju_link);
         int i=0, j=0;
         float min=0;
         float weight = 0;

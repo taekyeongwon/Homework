@@ -1,11 +1,16 @@
 package com.example.tkw33.homework3modify.GeoJson;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.tkw33.homework3modify.DB.DBHelper;
+import com.example.tkw33.homework3modify.MainActivity;
 import com.example.tkw33.homework3modify.MapActivity;
 import com.example.tkw33.homework3modify.Remote;
 
@@ -14,6 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
@@ -22,6 +28,7 @@ public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
     private GeoJsonCallBack mCallBack;
     public ArrayList<LinkLatLng> llist = null;
     public ArrayList<LatLng> list = null;
+    private LinkedList<Float> distance = new LinkedList<>();
     int colength;
     String _id, lat, lng;
     int loop = 1;
@@ -36,12 +43,15 @@ public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
         pb = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
         pb.setMax(86);
         pb.setProgress(loop);
+        //MainActivity.pb.setMax(86);
+        //MainActivity.pb.setProgress(loop);
     }
 
     @Override
     protected void onProgressUpdate(Integer... values) {
         super.onProgressUpdate(values);
         pb.setProgress(values[0].intValue());
+        //MainActivity.pb.setProgress(values[0].intValue());
     }
 
     @Override
@@ -52,13 +62,20 @@ public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
     }
 
     @Override
+    protected void onCancelled() {
+        super.onCancelled();
+        Toast.makeText(context, "다운로드 실패", Toast.LENGTH_SHORT).show();
+        mCallBack.onException();
+    }
+
+    @Override
     protected Void doInBackground(Integer... page) {
         int p = page[0].intValue();
         String link = "";
 
         llist = new ArrayList<>();
         list = new ArrayList<>();
-        while(loop<=p && isCancelled() == false) {
+        //while(loop<=p && isCancelled() == false) {
             try {
                 link = Remote.getLink(
                         "http://api.vworld.kr/req/data?service=data" +
@@ -95,7 +112,18 @@ public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
                         LatLng latLng = new LatLng(Double.parseDouble(lng), Double.parseDouble(lat));
                         list.add(latLng);
                     }
-                    LinkLatLng linkLatLng = new LinkLatLng(_id, list);
+                    for(int k = 0; k < list.size() - 1; k++){
+                        Location locationS = new Location("point A");
+                        locationS.setLatitude(list.get(k).latitude);
+                        locationS.setLongitude(list.get(k).longitude);
+
+                        Location locationE = new Location("point B");
+                        locationE.setLatitude(list.get(k+1).latitude);
+                        locationE.setLongitude(list.get(k+1).longitude);
+
+                        distance.add(locationS.distanceTo(locationE));
+                    }
+                    LinkLatLng linkLatLng = new LinkLatLng(_id, list, distance);
                     llist.add(linkLatLng);
                     //llist.add(list);
                     /*JSONObject coRow = coordinates.getJSONObject(0);
@@ -114,9 +142,10 @@ public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
             } catch (JSONException je) {
                 je.printStackTrace();
             }
-            loop++;
+            //loop++;
             publishProgress(loop);
-        }
+
+        //}
         //((MapActivity) MapActivity.mContext).GeoJsonResultOfLink(llist);
         return null;
     }

@@ -4,4 +4,5 @@ import java.util.ArrayList;
 
 public interface GeoJsonCallBack {
     void onFinish(ArrayList<LinkLatLng> llist);
+    void onException();
 }

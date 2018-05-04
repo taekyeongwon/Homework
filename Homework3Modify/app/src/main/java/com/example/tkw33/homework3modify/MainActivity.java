@@ -2,8 +2,12 @@ package com.example.tkw33.homework3modify;
 
 import android.app.ListActivity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,9 +24,14 @@ import android.widget.Toast;
 
 import com.example.tkw33.homework3modify.DB.DBHelper;
 
+import net.daum.mf.map.api.MapView;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
 
 
 public class MainActivity extends ListActivity {
@@ -34,7 +43,8 @@ public class MainActivity extends ListActivity {
     Button download_btn;
     DBHelper dbHelper = null;
     SQLiteDatabase database;
-    ProgressBar pb;
+    //public static ProgressBar pb;
+    boolean granted = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,8 +53,13 @@ public class MainActivity extends ListActivity {
         list_up_btn = (ImageButton) findViewById(R.id.list_up_btn);
         download_btn = (Button) findViewById(R.id.download_btn);
         listView = (ListView) findViewById(android.R.id.list);
-        pb = (ProgressBar) findViewById(R.id.pb);
+        //pb = (ProgressBar) findViewById(R.id.pb);
 
+        if(Build.VERSION.SDK_INT >= 23) {
+            PermissionCheck permissionCheck = new PermissionCheck(MainActivity.this,
+                    "storage");
+            permissionCheck.requestPermission();
+        }
         parsingTask = new ParsingTask();
         parsingTask.execute();
         list_up_btn.setOnClickListener(new View.OnClickListener() {
@@ -56,10 +71,15 @@ public class MainActivity extends ListActivity {
         download_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(dbHelper == null) {
-                    dbHelper = new DBHelper(MainActivity.this, "homework3.db", null, 1);
-                    database = dbHelper.getWritableDatabase();
-                }
+
+                    if (dbHelper == null && granted) {
+                        dbHelper = new DBHelper(MainActivity.this,
+                                "homework3.db",
+                                null, 1);
+                        database = dbHelper.getWritableDatabase();
+
+                    }
+
 
             }
         });
@@ -144,5 +164,21 @@ public class MainActivity extends ListActivity {
             } catch (JSONException e) {e.printStackTrace();}
         }
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 2 : {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("onRequestResult granted", "result granted");
+                    granted = true;
+                } else {
+                    Log.d("onRequestResult denied", "result denied");
+                    granted = false;
+                }
+                return;
+            }
+        }
     }
 }

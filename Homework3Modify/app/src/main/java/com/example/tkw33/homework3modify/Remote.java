@@ -80,6 +80,8 @@ public class Remote {
     public static String getLink(String webURL) throws Exception {
         String read = "";
         StringBuffer buffer = new StringBuffer();
+        StringBuffer buf;
+        String tmp;
         URL linkUrl = new URL(webURL);
         HttpURLConnection conn = (HttpURLConnection) linkUrl.openConnection();
         conn.setRequestMethod("GET");
@@ -107,15 +109,21 @@ public class Remote {
         buffer.replace(ind, ind + 1, "\"}]");
         //30.xxx"}]
 
-        int coindex = 0, last = 0, change = 0;
-        while(coindex < buffer.length()) {
-            last = buffer.indexOf("properties", coindex);
-            ///if((change = buffer.indexOf("[[", coindex)) != -1)
-              //  buffer.replace(change, change+2, "[");
-           // if((change = buffer.indexOf("]]", coindex)) != -1)
-              //  buffer.replace(change, change+2, "]");
-
-            coindex = buffer.indexOf("coordinates", coindex);
+        tmp = buffer.toString();
+        int coindex = 0, last = 0;//, lbrackets = 0, rbrackets = 0;
+        tmp = tmp.replaceAll("\\[\\[", "[");
+        tmp = tmp.replaceAll("\\]\\]", "]");
+        buf = new StringBuffer(tmp);
+        /*while((lbrackets = buffer.indexOf("[[", lbrackets + 1)) != -1
+                && (rbrackets = buffer.indexOf("]]", rbrackets + 1)) != -1) {
+            //lbrackets = buffer.indexOf("[[", lbrackets + 1);
+            buffer.replace(lbrackets, lbrackets+1, "");
+            //rbrackets = buffer.indexOf("]]", rbrackets + 1);
+            buffer.replace(rbrackets, rbrackets+1, "");
+        }*/
+        while(coindex < buf.length()) {
+            last = buf.indexOf("properties", coindex+1);
+            coindex = buf.indexOf("coordinates", coindex);
             if(coindex == -1 && last == -1)
                 break;
 
@@ -124,35 +132,33 @@ public class Remote {
             coindex += "\"coordinates\":".length();
 
             while (coindex < last) {
-                if(coindex == last-"\"}},\"".length()) {
-                    buffer.replace(coindex + 2, coindex + 4, "]");
-                    //30.xxx"}]},
+                if(coindex == last-"\"}]},\"".length()) {
                     coindex = last;
                     break;
                 }
-                if((change = buffer.indexOf("[[", change)) != -1)
-                    buffer.replace(change, change+3, "[");
+                //if((change = buffer.indexOf("[[", change)) != -1)
+                   // buffer.replace(change, change+2, "[");
 
 //수정
-                coindex = buffer.indexOf("[", coindex-1);
-                buffer.replace(coindex+1, coindex + 1, "{\"x\":\"");
+                coindex = buf.indexOf("[", coindex);
+                buf.replace(coindex, coindex + 1, "{\"x\":\"");
                 //"coordinates": [{"x": "
-                coindex = buffer.indexOf(",", coindex);
-                buffer.replace(coindex, coindex + 1, "\",\"y\":\"");
+                coindex = buf.indexOf(",", coindex);
+                buf.replace(coindex, coindex + 1, "\",\"y\":\"");
                 //127.xxx","y": "
 
-                if((change = buffer.indexOf("]]", change)) != -1)
-                    buffer.replace(change, change+3, "]");
+                //if((change = buffer.indexOf("]]", change)) != -1)
+                    //buffer.replace(change, change+2, "]");
 
-                coindex = buffer.indexOf("]", coindex);
-                buffer.replace(coindex, coindex + 1, "\"}");
-                //30.xxx"}]]},
+                coindex = buf.indexOf("]", coindex);
+                buf.replace(coindex, coindex + 1, "\"}");
+                //30.xxx"}]},
 
-                last = buffer.indexOf("properties", coindex);
+                last = buf.indexOf("properties", coindex);
             }
         }
 
-        buffer.append("}}}");
-        return buffer.toString();
+        buf.append("}}}");
+        return buf.toString();
     }
 }
