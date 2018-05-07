@@ -3,17 +3,12 @@ package com.example.tkw33.homework3modify;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
-import android.widget.Adapter;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListAdapter;
@@ -21,17 +16,16 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-
-import com.example.tkw33.homework3modify.DB.DBHelper;
-
-import net.daum.mf.map.api.MapView;
+import com.example.tkw33.homework3modify.DB.MakeGraph;
+import com.example.tkw33.homework3modify.GeoJson.DoLinkGeoJsonParsing;
+import com.example.tkw33.homework3modify.GeoJson.DoNodeGeoJsonParsing;
+import com.example.tkw33.homework3modify.GeoJson.GeoJsonCallBack;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.IOException;
+//import com.example.tkw33.homework3modify.DB.DBHelper;
 
 
 public class MainActivity extends ListActivity {
@@ -41,10 +35,11 @@ public class MainActivity extends ListActivity {
     ImageButton list_up_btn;
     JsonItemData[] jsonItemArray;
     Button download_btn;
-    DBHelper dbHelper = null;
-    SQLiteDatabase database;
-    //public static ProgressBar pb;
+    //DBHelper dbHelper = null;
+    //SQLiteDatabase database;
+    public static ProgressBar pb;
     boolean granted = false;
+    int size = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +48,7 @@ public class MainActivity extends ListActivity {
         list_up_btn = (ImageButton) findViewById(R.id.list_up_btn);
         download_btn = (Button) findViewById(R.id.download_btn);
         listView = (ListView) findViewById(android.R.id.list);
-        //pb = (ProgressBar) findViewById(R.id.pb);
+        pb = (ProgressBar) findViewById(R.id.pb);
 
         if(Build.VERSION.SDK_INT >= 23) {
             PermissionCheck permissionCheck = new PermissionCheck(MainActivity.this,
@@ -71,17 +66,42 @@ public class MainActivity extends ListActivity {
         download_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                    if (dbHelper == null && granted) {
-                        dbHelper = new DBHelper(MainActivity.this,
-                                "homework3.db",
-                                null, 1);
-                        database = dbHelper.getWritableDatabase();
-
+                //final String dirPath = Environment.getExternalStorageDirectory()+"/test";
+                //final File file = new File(dirPath);
+//파일이 없고 granted이면//
+                    if (/*dbHelper == null && */granted) {
+                        //dbHelper = new DBHelper(MainActivity.this,
+                            //    "homework3.db",
+                          //      null, 1);
+                        //database = dbHelper.getWritableDatabase();
+                        for(int i = 1; i<=30; i++){
+                            DoNodeGeoJsonParsing geoJsonParsing = new DoNodeGeoJsonParsing(MainActivity.this, new GeoJsonCallBack() {
+                                @Override
+                                public void onFinish(int loop) {
+                                    if (loop == 30){
+                                        for (int i = 1; i<=86; i++) {
+                                            DoLinkGeoJsonParsing geoJsonParsing = new DoLinkGeoJsonParsing(MainActivity.this, new GeoJsonCallBack() {
+                                                @Override
+                                                public void onFinish(int loop) {
+                                                    if (loop == 86) {
+                                                        MakeGraph mGraph = new MakeGraph();
+                                                        Toast.makeText(MainActivity.this, "done.", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+                                            });
+                                            geoJsonParsing.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, i);
+                                        }
+                                    }
+                                }
+                            });
+                            geoJsonParsing.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, i);
+                        }
+                        //for(int i=1; i<=86; i++) {
+                            //geoJsonParsing.execute(86);
+                        //}
+                    }
                     }
 
-
-            }
         });
     }
 
@@ -180,5 +200,11 @@ public class MainActivity extends ListActivity {
                 return;
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        System.exit(0);
     }
 }

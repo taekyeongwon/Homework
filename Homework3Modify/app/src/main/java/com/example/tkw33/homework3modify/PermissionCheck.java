@@ -7,8 +7,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
-import net.daum.android.map.MapActivity;
-
 public class PermissionCheck extends AppCompatActivity {
     private final static int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private final static int MY_PERMISSIONS_REQUEST_EXTERNAL_STORAGE = 2;
@@ -47,6 +45,10 @@ public class PermissionCheck extends AppCompatActivity {
 
                 }
                 ActivityCompat.requestPermissions(context, new String[] {permissions[1], permissions[2]},
+                        MY_PERMISSIONS_REQUEST_EXTERNAL_STORAGE);
+            }
+            else {
+                ActivityCompat.requestPermissions(context, new String[]{permissions[1], permissions[2]},
                         MY_PERMISSIONS_REQUEST_EXTERNAL_STORAGE);
             }
         }

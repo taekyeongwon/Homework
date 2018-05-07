@@ -2,10 +2,19 @@ package com.example.tkw33.homework3modify;
 
 import android.util.Log;
 
+import com.example.tkw33.homework3modify.GeoJson.LatLng;
+import com.example.tkw33.homework3modify.GeoJson.LinkLatLng;
+import com.example.tkw33.homework3modify.GeoJson.NodeLatLng;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class Remote {
     public static String getData(String webURL) throws Exception {
@@ -160,5 +169,86 @@ public class Remote {
 
         buf.append("}}}");
         return buf.toString();
+    }
+    public static void GeoJsonParsing(String data, String select){
+        int colength;
+        double dist = 0.0;
+        String _id, lat, lng;
+        ArrayList<LatLng> list;
+        try {
+            JSONObject jsonObject = new JSONObject(data);
+            JSONObject response = jsonObject.getJSONObject("response");
+            JSONObject result = response.getJSONObject("result");
+            JSONObject featureCollection = result.getJSONObject("featureCollection");
+            JSONArray features = featureCollection.getJSONArray("features");
+
+            int flength = features.length();
+
+            if(select == "link") {
+                for (int i = 0; i < flength; i++) {
+                    JSONObject row = features.getJSONObject(i);
+                    JSONObject geometry = row.getJSONObject("geometry");
+                    JSONObject properties = row.getJSONObject("properties");
+                    JSONArray coordinates = geometry.getJSONArray("coordinates");
+                    _id = properties.getString("link_id");
+                    colength = coordinates.length();
+                    list = new ArrayList<>();
+                    for (int j = 0; j < colength; j++) {
+                        JSONObject coRow = coordinates.getJSONObject(j);
+                        lat = coRow.getString("y");
+                        lng = coRow.getString("x");
+                        LatLng latLng = new LatLng(Double.parseDouble(lng), Double.parseDouble(lat));
+
+                        list.add(latLng);
+                    }
+                    for (int k = 0; k < list.size() - 1; k++) {
+
+                        dist += calcDistance(list.get(k).latitude, list.get(k).longitude,
+                                list.get(k + 1).latitude, list.get(k + 1).longitude);
+                    }
+                    LinkLatLng linkLatLng = new LinkLatLng(_id, list, dist);
+                    LinkLatLng.llist.add(linkLatLng);
+                    dist = 0.0;
+
+                }
+            }
+            else if(select == "node"){
+                for (int i = 0; i < flength; i++) {
+                    JSONObject row = features.getJSONObject(i);
+                    JSONObject geometry = row.getJSONObject("geometry");
+                    JSONObject properties = row.getJSONObject("properties");
+                    JSONObject coordinates = geometry.getJSONObject("coordinates");
+                    _id = properties.getString("node_id");
+                    lng = coordinates.getString("x");
+                    lat = coordinates.getString("y");
+                    //LatLng latlng = new LatLng(Double.parseDouble(lng), Double.parseDouble(lat));
+                    //list2.add(latlng);
+                    NodeLatLng nodeLatLng = new NodeLatLng(_id, Double.parseDouble(lat), Double.parseDouble(lng));
+                    NodeLatLng.nlist.add(nodeLatLng);
+                }
+
+            }
+        } catch (JSONException je) {
+            je.printStackTrace();
+        }
+    }
+    public static double calcDistance(double lat1, double lng1, double lat2, double lng2){
+        double EARTH_R, Rad, radLat1, radLat2, radDist;
+        double distance, ret;
+
+        EARTH_R = 6371000.0;
+        Rad = Math.PI/180;
+        radLat1 = Rad * lat1;
+        radLat2 = Rad * lat2;
+        radDist = Rad * (lng1 - lng2);
+
+        distance = Math.sin(radLat1) * Math.sin(radLat2);
+        distance = distance + Math.cos(radLat1) * Math.cos(radLat2) * Math.cos(radDist);
+        ret = EARTH_R * Math.acos(distance);
+
+        double rslt = Math.round(Math.round(ret) / 1000);
+        if(rslt == 0)
+            rslt = Math.round(ret);
+        return rslt;
     }
 }

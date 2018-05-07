@@ -1,16 +1,12 @@
 package com.example.tkw33.homework3modify;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
-import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -19,11 +15,8 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.example.tkw33.homework3modify.DB.DBHelper;
-import com.example.tkw33.homework3modify.DB.ParsingData;
-import com.example.tkw33.homework3modify.GeoJson.DoLinkGeoJsonParsing;
-import com.example.tkw33.homework3modify.GeoJson.LatLng;
 import com.example.tkw33.homework3modify.GeoJson.LinkLatLng;
+import com.example.tkw33.homework3modify.GeoJson.NodeLatLng;
 
 import net.daum.mf.map.api.CameraUpdateFactory;
 import net.daum.mf.map.api.MapPOIItem;
@@ -49,13 +42,15 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     boolean isGranted = false;
     public static Context mContext;
     //List<LatLng> jeju_node = new ArrayList<>();
-    ArrayList<ParsingData> jeju_link = new ArrayList<>();
+    //ArrayList<ParsingData> jeju_link = new ArrayList<>();
+    ArrayList<LinkLatLng> jeju_link = new ArrayList<>();
+    ArrayList<NodeLatLng> jeju_node = new ArrayList<>();
     boolean isLongTouched = false;
     MapPoint[] findNode = new MapPoint[2];
 
-    DBHelper dbHelper;
-    SQLiteDatabase db;
-    double timeAvg = 0.0;
+    //DBHelper dbHelper;
+    //SQLiteDatabase db;
+    //double timeAvg = 0.0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,15 +82,18 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         mapView.setPOIItemEventListener(this);
         mapView.setCurrentLocationEventListener(this);
 
-        dbHelper = new DBHelper(MapActivity.this,
-                "homework3.db", null, 1);
-        db = dbHelper.getReadableDatabase();
-        jeju_link = dbHelper.getDBData();
+        //dbHelper = new DBHelper(MapActivity.this,
+          //      "homework3.db", null, 1);
+        //db = dbHelper.getReadableDatabase();
+        //jeju_link = dbHelper.getDBData();
+        //jeju_link = LinkLatLng.llist;
+        //Toast.makeText(mContext, ""+jeju_link.get(0).link_id, Toast.LENGTH_SHORT).show();
+        //jeju_node = NodeLatLng.nlist;
+        Toast.makeText(mContext, ""+NodeLatLng.nlist.get(0).node_id+""+NodeLatLng.nlist.get(0).getLink().get(0).distance, Toast.LENGTH_SHORT).show();
         geoCoding();
         createMarker(mapView);
         container.addView(mapView);
         mContext = this;
-
     }
 
     /*public void GeoJsonResultOfLink(List<LinkLatLng> list){

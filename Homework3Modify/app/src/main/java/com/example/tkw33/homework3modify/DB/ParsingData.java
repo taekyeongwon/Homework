@@ -1,4 +1,4 @@
-package com.example.tkw33.homework3modify.DB;
+/*package com.example.tkw33.homework3modify.DB;
 
 import com.example.tkw33.homework3modify.GeoJson.LatLng;
 
@@ -19,4 +19,4 @@ public class ParsingData {
         this.elng = elng;
         this.dist = dist;
     }
-}
+}*/

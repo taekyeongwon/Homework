@@ -1,4 +1,4 @@
-package com.example.tkw33.homework3modify.DB;
+/*package com.example.tkw33.homework3modify.DB;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -6,25 +6,21 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.location.Location;
-import android.os.Parcelable;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.example.tkw33.homework3modify.GeoJson.DoLinkGeoJsonParsing;
 import com.example.tkw33.homework3modify.GeoJson.GeoJsonCallBack;
-import com.example.tkw33.homework3modify.GeoJson.LatLng;
 import com.example.tkw33.homework3modify.GeoJson.LinkLatLng;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.LinkedList;
 
 public class DBHelper extends SQLiteOpenHelper {
     public Context context;
     //private LinkedList<Float> distance = new LinkedList<>();
-
+    int size;
+    private ArrayList<LinkLatLng> linklist = new ArrayList<>();
     public DBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
         this.context = context;
@@ -43,41 +39,67 @@ public class DBHelper extends SQLiteOpenHelper {
         sb.append(" ELNG TEXT, ");
         sb.append(" DIST TEXT ) ");
         db.execSQL(sb.toString());
+        StringBuffer buf = new StringBuffer();
+        buf.append(" CREATE INDEX IF NOT EXISTS LINK on MY_TABLE ( ");
+        buf.append(" _ID, LINK_ID, SLAT, SLNG, ELAT, ELNG, DIST ) ");
+        db.execSQL(buf.toString());
+
         Toast.makeText(context, "table 생성 완료", Toast.LENGTH_SHORT).show();
         //DoLinkGeoJsonParsing.llist
-        DoLinkGeoJsonParsing geoJsonParsing = new DoLinkGeoJsonParsing(context, new GeoJsonCallBack() {
-            @Override
-            public void onFinish(ArrayList<LinkLatLng> llist) {
-                SQLiteDatabase sql = getWritableDatabase();
-                sql.beginTransaction();
-                try{
-                    for(int i = 0; i < llist.size(); i++){
-                        for(int j = 0; j < llist.get(i).coordinate.size() - 1; j++) {
-                            ContentValues cv = new ContentValues();
-                            cv.put("LINK_ID", llist.get(i).link_id);
-                            cv.put("SLAT", llist.get(i).coordinate.get(j).latitude);
-                            cv.put("SLNG", llist.get(i).coordinate.get(j).longitude);
-                            cv.put("ELAT", llist.get(i).coordinate.get(j + 1).latitude);
-                            cv.put("ELNG", llist.get(i).coordinate.get(j + 1).longitude);
-                            cv.put("DIST", llist.get(i).distance.get(j));
-                            sql.insert("MY_TABLE", null, cv);
+        for(int i=1; i<=86; i++) {
+            DoLinkGeoJsonParsing geoJsonParsing = new DoLinkGeoJsonParsing(context, new GeoJsonCallBack() {
+                @Override
+                public void onFinish(int loop) {
+                    if (loop == 86) {
+
+                        //for (int index = 0; index < LinkLatLng.llist.size(); index++) {
+                        //  linklist.add(LinkLatLng.llist.get(index));
+                        //}
+                        //아래 트랜잭션을 86번 반복해서 따로따로 insert하는 방법 생각해보기
+                        //위 방법보단 지금 아래 for문이 main thread에서 돌아서 다 돌 동안 리스트뷰가 멈춰있으므로
+                        //더 빨리 저장할 방법을 찾거나, asynctask에서 DBHelper 생성해서 writableDatabase로 열어서
+                        //트랜잭션을 열고 insert하는 방법이 좋을 것 같음.
+                        //그리고 거리 단위가 얼마인지 100가지 정도만 두 좌표간의 거리를 출력해보기.
+                        size = LinkLatLng.llist.size();
+                        long start, end;
+                        start = System.currentTimeMillis();
+
+                        SQLiteDatabase sql = getWritableDatabase();
+                        sql.beginTransaction();
+                        try {
+                            for (int i = 0; i < size; i++) {
+                                for (int j = 0; j < LinkLatLng.llist.get(i).coordinate.size() - 1; j++) {
+                                    ContentValues cv = new ContentValues();
+                                    cv.put("LINK_ID", LinkLatLng.llist.get(i).link_id);
+                                    cv.put("SLAT", LinkLatLng.llist.get(i).coordinate.get(j).latitude);
+                                    cv.put("SLNG", LinkLatLng.llist.get(i).coordinate.get(j).longitude);
+                                    cv.put("ELAT", LinkLatLng.llist.get(i).coordinate.get(j + 1).latitude);
+                                    cv.put("ELNG", LinkLatLng.llist.get(i).coordinate.get(j + 1).longitude);
+                                    cv.put("DIST", LinkLatLng.llist.get(i).distance);
+
+                                    sql.insert("MY_TABLE", null, cv);
+                                }
+                                //Log.d("DISTANCE : ",""+LinkLatLng.llist.get(i).distance);
+                            }
+                            sql.setTransactionSuccessful();
+                        } catch (SQLException sqle) {
+                            sqle.printStackTrace();
+                        } finally {
+                            sql.endTransaction();
                         }
+                        end = System.currentTimeMillis();
+                        Log.d("TOTAL_TIME : ", ""+(end-start)/1000.0);
                     }
-                    sql.setTransactionSuccessful();
                 }
-                catch (SQLException sqle) {sqle.printStackTrace();}
-                finally {
-                    sql.endTransaction();
+
+                @Override
+                public void onException() {
+
                 }
-            }
-
-            @Override
-            public void onException() {
-
-            }
-        });
-        geoJsonParsing.execute(86);
-
+            });
+            geoJsonParsing.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, i);
+            //geoJsonParsing.execute(86);
+        }
     }
 
     @Override
@@ -103,7 +125,7 @@ public class DBHelper extends SQLiteOpenHelper {
             elat = cursor.getString(4);
             elng = cursor.getString(5);
             dist = cursor.getString(6);
-            Log.d("GETDBDATA", ""+slat+", "+slng);
+            //Log.d("GETDBDATA", ""+slat+", "+slng);
             ParsingData parsingData = new ParsingData(_id, link_id, Double.parseDouble(slat),
                     Double.parseDouble(slng), Double.parseDouble(elat), Double.parseDouble(elng), Double.parseDouble(dist));
             data.add(parsingData);
@@ -139,5 +161,6 @@ public class DBHelper extends SQLiteOpenHelper {
             //}
         }
         //return distance;
-    }*/
+    }
 }
+*/

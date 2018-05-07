@@ -1,152 +1,164 @@
 package com.example.tkw33.homework3modify.GeoJson;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.location.Location;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
-import android.widget.ProgressBar;
+import android.os.Environment;
+import android.util.Log;
 import android.widget.Toast;
 
-import com.example.tkw33.homework3modify.DB.DBHelper;
 import com.example.tkw33.homework3modify.MainActivity;
-import com.example.tkw33.homework3modify.MapActivity;
 import com.example.tkw33.homework3modify.Remote;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
-    private ProgressBar pb;
+    //private ProgressBar pb;
     private Context context;
     private GeoJsonCallBack mCallBack;
-    public ArrayList<LinkLatLng> llist = null;
-    public ArrayList<LatLng> list = null;
-    private LinkedList<Float> distance = new LinkedList<>();
+    Remote remote = new Remote();
+    File saveFile;
+    static int i = 1;
+    //public static ArrayList<LinkLatLng> llist;
+    //public ArrayList<LatLng> list = null;
+    //private ArrayList<Double> distance = new ArrayList<>();
+    //Location locationS = new Location("point A");
+    //Location locationE = new Location("point B");
     int colength;
     String _id, lat, lng;
-    int loop = 1;
+    File file;
+    static int loop = 1;
 
-    public DoLinkGeoJsonParsing(Context context, GeoJsonCallBack mCallBack){
+    public DoLinkGeoJsonParsing(Context context, GeoJsonCallBack mCallBack) {
         this.context = context;
         this.mCallBack = mCallBack;
     }
+
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        pb = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
-        pb.setMax(86);
-        pb.setProgress(loop);
-        //MainActivity.pb.setMax(86);
-        //MainActivity.pb.setProgress(loop);
+        //pb = new ProgressBar(context, null, android.R.attr.progressBarStyleHorizontal);
+        ///pb.setMax(86);
+        //pb.setProgress(loop);
+        MainActivity.pb.setMax(86);
+        MainActivity.pb.setProgress(loop);
     }
 
     @Override
     protected void onProgressUpdate(Integer... values) {
         super.onProgressUpdate(values);
-        pb.setProgress(values[0].intValue());
-        //MainActivity.pb.setProgress(values[0].intValue());
+        //pb.setProgress(values[0].intValue());
+        MainActivity.pb.setProgress(values[0].intValue());
     }
 
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
-        Toast.makeText(context, "다운로드 완료.", Toast.LENGTH_SHORT).show();
-        mCallBack.onFinish(llist);
+        //Toast.makeText(context, "다운로드 완료.", Toast.LENGTH_SHORT).show();
+        mCallBack.onFinish(loop);
+        //mCallBack.onFinish();
     }
 
     @Override
     protected void onCancelled() {
         super.onCancelled();
         Toast.makeText(context, "다운로드 실패", Toast.LENGTH_SHORT).show();
-        mCallBack.onException();
     }
 
     @Override
     protected Void doInBackground(Integer... page) {
-        int p = page[0].intValue();
-        String link = "";
+        synchronized (this) {
+            int p = page[0].intValue();
+            //while (p <= 2994) {
 
-        llist = new ArrayList<>();
-        list = new ArrayList<>();
-        //while(loop<=p && isCancelled() == false) {
-            try {
-                link = Remote.getLink(
-                        "http://api.vworld.kr/req/data?service=data" +
-                                "&request=GetFeature&data=LT_L_MOCTLINK" +
-                                "&key=E1D5AE1B-4457-3678-AB90-181118857DA8&page=" + loop + "&size=100" +
-                                "&geomFilter=BOX(126.153311,33.187779,126.940882,33.582154)" +
-                                "&domain=com.example.tkw33.homework3modify");
-            } catch (Exception e) {
-                e.printStackTrace();
+            String link = "";
+
+            //LinkLatLng.llist = new ArrayList<>();
+            //list = new ArrayList<>();
+            double dist = 0.0;
+            long start, end;
+            start = System.currentTimeMillis();
+            //while(loop<=p && isCancelled() == false) {
+            String dirPath = Environment.getExternalStorageDirectory() + "/Link";
+            file = new File(dirPath);
+            // Log.v("FILEPATH : ",dirPath);
+            File existFile = new File(dirPath + "/link86.txt");
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+            if (!existFile.exists()) {
+                try {
+                    //노드 하나의 좌표로 geomFilter에 넣으면 8개 연결된 링크의 좌표가 나오는데 이렇게 노드의 개수만큼만 하면
+                    //훨씬 절약 될 듯
+                    link = Remote.getLink(
+                            "http://api.vworld.kr/req/data?service=data" +
+                                    "&request=GetFeature&data=LT_L_MOCTLINK" +
+                                    "&key=E1D5AE1B-4457-3678-AB90-181118857DA8&page="+p+"&size=100" +
+                                    "&geomFilter=BOX(126.153311,33.187779,126.940882,33.582154)" +
+                                    "&domain=com.example.tkw33.homework3modify");
+                    //
+                    //(NodeLatLng.nlist.get(p - 1).lng - 0.0001) + "," +
+                    //(NodeLatLng.nlist.get(p - 1).lat - 0.0001) + "," + (NodeLatLng.nlist.get(p - 1).lng + 0.0001) + "," +
+                    //(NodeLatLng.nlist.get(p - 1).lat + 0.0001) +
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                //String testStr = link;
+                saveFile = new File(dirPath + "/link" + p + ".txt");
+                try {
+                    FileOutputStream fos = new FileOutputStream(saveFile);
+                    fos.write(link.getBytes());
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                            Uri.parse("file://" + dirPath + "/link" + p + ".txt")));
+
+                }
+            }
+            if (file.listFiles().length > 0) {
+                //    for (File f : file.listFiles()) {
+                //String str = file.getName();
+                //Log.v(null, "filename:"+str);
+                //String loadPath = dirPath + "/" + str;
+                String loadPath = dirPath + "/link" + p + ".txt";
+                try {
+                    FileInputStream fis = new FileInputStream(loadPath);
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fis));
+
+                    String content = "", temp = "";
+                    while ((temp = bufferedReader.readLine()) != null) {
+                        content += temp;
+                    }
+                    //Log.v(null, ""+content);
+                    //Remote.GeoJsonParsing(content, "link");//->이부분을 asynctask안에 파일이 있을때와 없을때로 똑같이 나눠서 해보기.
+                    Remote.GeoJsonParsing(content, "link");
+                    // 메인스레드에서 돌아가서 너무 느림
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
 
             //llist = new ArrayList<>();
 
-            try {
-                JSONObject jsonObject = new JSONObject(link);
-                JSONObject response = jsonObject.getJSONObject("response");
-                JSONObject result = response.getJSONObject("result");
-                JSONObject featureCollection = result.getJSONObject("featureCollection");
-                JSONArray features = featureCollection.getJSONArray("features");
-
-                int flength = features.length();
-
-                for (int i = 0; i < flength; i++) {
-                    JSONObject row = features.getJSONObject(i);
-                    JSONObject geometry = row.getJSONObject("geometry");
-                    JSONObject properties = row.getJSONObject("properties");
-                    JSONArray coordinates = geometry.getJSONArray("coordinates");
-                    _id = properties.getString("link_id");
-                    colength = coordinates.length();
-                    for(int j = 0; j < colength; j++){
-                        JSONObject coRow = coordinates.getJSONObject(j);
-                        lat = coRow.getString("y");
-                        lng = coRow.getString("x");
-                        LatLng latLng = new LatLng(Double.parseDouble(lng), Double.parseDouble(lat));
-                        list.add(latLng);
-                    }
-                    for(int k = 0; k < list.size() - 1; k++){
-                        Location locationS = new Location("point A");
-                        locationS.setLatitude(list.get(k).latitude);
-                        locationS.setLongitude(list.get(k).longitude);
-
-                        Location locationE = new Location("point B");
-                        locationE.setLatitude(list.get(k+1).latitude);
-                        locationE.setLongitude(list.get(k+1).longitude);
-
-                        distance.add(locationS.distanceTo(locationE));
-                    }
-                    LinkLatLng linkLatLng = new LinkLatLng(_id, list, distance);
-                    llist.add(linkLatLng);
-                    //llist.add(list);
-                    /*JSONObject coRow = coordinates.getJSONObject(0);
-                    lxLng = coRow.getString("x");
-                    lyLat = coRow.getString("y");
-                    coRow = coordinates.getJSONObject(1);
-                    lxLng2 = coRow.getString("x");
-                    lyLat2 = coRow.getString("y");
-
-                    LinkLatLng latlng = new LinkLatLng(Double.parseDouble(lxLng), Double.parseDouble(lyLat),
-                            Double.parseDouble(lxLng2), Double.parseDouble(lyLat2));
-                    llist.add(latlng);*/
-
-                }
-                //((MapActivity) MapActivity.mContext).GeoJsonResultOfLink(llist);
-            } catch (JSONException je) {
-                je.printStackTrace();
-            }
-            //loop++;
+            //Remote.GeoJsonParsing(link);
+            loop = p;
             publishProgress(loop);
 
-        //}
-        //((MapActivity) MapActivity.mContext).GeoJsonResultOfLink(llist);
+            //}
+            end = System.currentTimeMillis();
+            Log.d("DOWNLOADING LINKTIME : ", "" + (end - start) / 1000.0);
+            //((MapActivity) MapActivity.mContext).GeoJsonResultOfLink(llist);
+        }
         return null;
     }
+
 }
