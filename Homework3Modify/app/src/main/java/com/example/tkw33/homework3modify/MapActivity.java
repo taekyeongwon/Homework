@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Stack;
 
 public class MapActivity extends FragmentActivity implements MapView.MapViewEventListener,
         MapView.POIItemEventListener, MapView.CurrentLocationEventListener{
@@ -129,6 +128,14 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
             listStack.parent = startNode.node_id;
             closed.add(listStack);
             AstarAlgorithm(sIndex, listStack.GScore);
+            /*
+            MapPolyline mapPolyline = new MapPolyline();
+            mapPolyline.setLineColor(Color.argb(128, 0, 255, 255));
+
+            mapPolyline.addPoint(MapPoint.mapPointWithGeoCoord();
+            mapPolyline.addPoint(MapPoint.mapPointWithGeoCoord();
+            mapView.addPolyline(mapPolyline);
+            */
             return null;
         }
     }
@@ -136,12 +143,12 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         MakeGraph makeGraph = new MakeGraph(
                 findNode[0].getMapPointGeoCoord().latitude, findNode[0].getMapPointGeoCoord().longitude,
                 findNode[1].getMapPointGeoCoord().latitude, findNode[1].getMapPointGeoCoord().longitude);
+        //jeju_link = makeGraph.init();
         jeju_node = makeGraph.init();
-
         //getDistance(jeju_link);
         int i = 0, j = 0;
         float smin = 0, emin = 0;
-        float weight = 0;
+        //float weight = 0;
 
 
         float[] minSPointWeight = new float[jeju_node.size()];
@@ -165,7 +172,7 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         }
         smin = minSPointWeight[0];
         emin = minEPointWeight[0];
-        for(j = 0; j < i; j++){
+        for(j = 1; j < i; j++){
             if(smin>minSPointWeight[j]) {
                 smin = minSPointWeight[j];
                 sIndex = j;
@@ -196,20 +203,20 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     public void AstarAlgorithm(int sIndex, double g_Score) {
         NodeLatLng startNode = jeju_node.get(sIndex);
         NodeLatLng endNode;
-        String[] tmp = new String[startNode.getLink().size()];
+        String[] tmp = new String[startNode.getLink().size() - 1];
         double min;
-
+        int index = 0;
 
         for(int len = 0; len < tmp.length; len++){  //startNode에 연결된 링크만 임시로 저장
             //만약 startNode.getLink().get(len).getNode().node_id가 closed배열에 있으면 continue;
-            if(closed.contains(startNode.getLink().get(len).getNextNode().node_id))
+            if(closed.contains(startNode.getLink().get(len).getNextNode().node_id))   //getLink.get(i%2)로
                 continue;
-            tmp[len] = startNode.getLink().get(len).getNextNode().node_id;
+            tmp[index++] = startNode.getLink().get(len).getNextNode().node_id;
         }
 
         //startNode.getLink().get(i).getNode().node_id;
         for(int i = 0; i < jeju_node.size(); i++) {
-            if(i == eIndex)
+            if(jeju_node.get(i).node_id == jeju_node.get(eIndex).node_id) //노드id로 비교
                 break;
             for(int j = 0; j < tmp.length; j++) {
                 if (jeju_node.get(i).node_id == tmp[j]) {
@@ -249,23 +256,28 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
                 }
             }
         }
-        int index = 0;
+        int minOpenIndex = 0;
         min = open.get(0).FScore;
         for(int length = 1; length < open.size(); length++){
             if( min > open.get(length).FScore){
                 min = open.get(length).FScore;
-                index = length;
+                minOpenIndex = length;
+
             }
         }
-        closed.push(open.get(index));
-        open.remove(index);
+        for(int s = 0; s<jeju_node.size(); s++) {
+            if(open.get(minOpenIndex).node_id == jeju_node.get(s).node_id)
+                sIndex = s;
+        }
+        closed.push(open.get(minOpenIndex));
+        open.remove(minOpenIndex);
         //LinkedList<String> l = new LinkedList<>();
         // open배열에 있는 F값중 가장 작은 인덱스를 closed배열에 저장. (open배열 해당 인덱스get해서 closed에 push 후 해당 인덱스remove)
         // closed[0]있으므로 인덱스 1부터 시작.
         //다음 호출할 때의 sIndex는 closed에 저장된 노드의 인덱스로. (closed 마지막 인덱스)
-        if(open.get(index).node_id != jeju_node.get(eIndex).node_id)
-            AstarAlgorithm(index , listStack.GScore);
-        //return
+        if(open.get(minOpenIndex).node_id != jeju_node.get(eIndex).node_id)
+            AstarAlgorithm(sIndex , listStack.GScore);
+        //이부분 디버깅해보기 재귀호출하면서 오류터짐.//
     }
     public void geoCoding(){
         final Geocoder geocoder = new Geocoder(this);
