@@ -5,6 +5,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -15,6 +17,7 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.example.tkw33.homework3modify.DB.MakeGraph;
 import com.example.tkw33.homework3modify.GeoJson.LinkLatLng;
 import com.example.tkw33.homework3modify.GeoJson.NodeLatLng;
 
@@ -27,7 +30,9 @@ import net.daum.mf.map.api.MapView;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 
 public class MapActivity extends FragmentActivity implements MapView.MapViewEventListener,
         MapView.POIItemEventListener, MapView.CurrentLocationEventListener{
@@ -41,16 +46,37 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
     Address sp_address = null, ep_address = null;
     boolean isGranted = false;
     public static Context mContext;
-    //List<LatLng> jeju_node = new ArrayList<>();
-    //ArrayList<ParsingData> jeju_link = new ArrayList<>();
     ArrayList<LinkLatLng> jeju_link = new ArrayList<>();
     ArrayList<NodeLatLng> jeju_node = new ArrayList<>();
     boolean isLongTouched = false;
     MapPoint[] findNode = new MapPoint[2];
+    //LinkedList<NodeLatLng> open = new LinkedList<>();
+    //LinkedList<NodeLatLng> closed = new LinkedList<>();
+    int sIndex = 0, eIndex = 0;
+    NodeLatLng startNode;
+    NodeLatLng endNode;
+    int k = 0;
+    ListStack listStack;
 
     //DBHelper dbHelper;
     //SQLiteDatabase db;
     //double timeAvg = 0.0;
+    class ListStack {
+        String node_id;
+        double FScore, GScore, HScore;
+        String parent;
+    }
+    /*class ClosedList {
+        String node_id;
+        double FScore, GScore, HScore;
+        NodeLatLng parent;
+    }*/
+    //ClosedList[] closed = new ClosedList[jeju_node.size()];
+    //OpenList[] open = new OpenList[jeju_node.size()];
+    LinkedList<ListStack> open = new LinkedList<>();
+    LinkedList<ListStack> closed = new LinkedList<>();
+    //ListStack[] open = new ListStack[jeju_node.size()];
+    //ListStack[] closed = new ListStack[jeju_node.size()];
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,94 +108,164 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
         mapView.setPOIItemEventListener(this);
         mapView.setCurrentLocationEventListener(this);
 
-        //dbHelper = new DBHelper(MapActivity.this,
-          //      "homework3.db", null, 1);
-        //db = dbHelper.getReadableDatabase();
-        //jeju_link = dbHelper.getDBData();
-        //jeju_link = LinkLatLng.llist;
-        //Toast.makeText(mContext, ""+jeju_link.get(0).link_id, Toast.LENGTH_SHORT).show();
         //jeju_node = NodeLatLng.nlist;
-        Toast.makeText(mContext, ""+NodeLatLng.nlist.get(0).node_id+""+NodeLatLng.nlist.get(0).getLink().get(0).distance, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(mContext, ""+NodeLatLng.nlist.get(0).node_id+""+NodeLatLng.nlist.get(0).getLink().get(0).distance, Toast.LENGTH_SHORT).show();
         geoCoding();
         createMarker(mapView);
         container.addView(mapView);
         mContext = this;
     }
 
-    /*public void GeoJsonResultOfLink(List<LinkLatLng> list){
-        //jeju_link = list;
-        for(int index = 0; index < list.size(); index++){
-            jeju_link.add(list.get(index));
+    public class SearchRoute extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            startFindRoute();
+            startNode = jeju_node.get(sIndex);
+            ListStack listStack = new ListStack();
+            listStack.node_id = startNode.node_id;
+            listStack.GScore = 0;
+            listStack.HScore = 0;
+            listStack.FScore = listStack.GScore + listStack.HScore;
+            listStack.parent = startNode.node_id;
+            closed.add(listStack);
+            AstarAlgorithm(sIndex, listStack.GScore);
+            return null;
         }
     }
-    public void GeoJsonResultOfNode(List<LatLng> list){
-        //int i=0;
-        MapPOIItem node_marker[] = new MapPOIItem[list.size()];
-        MapPOIItem node;
-        //MapView mapView = this.mapView;
-        while(i<list.size()) {
-            node = new MapPOIItem();
-            node.setItemName(String.valueOf(i));
-            node.setMapPoint(MapPoint.mapPointWithGeoCoord(list.get(i).latitude, list.get(i).longitude));
-            node.setMarkerType(MapPOIItem.MarkerType.BluePin);
-            node.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin);
-            node_marker[i++] = node;
-        }
-        mapView.addPOIItems(node_marker);//
-        //synchronized (this) {
-            for (int index = 0; index < list.size(); index++)
-                jeju_node.add(list.get(index));
-            //for(int index = 0; index<list2.size(); index++)
-                //jeju_link.add(list2.get(index));
-        //}
-        //jeju_node = list;
-    }*/
-    public void startFindRoute(){
+    public void startFindRoute(){   //asynctask에서 돌리기
+        MakeGraph makeGraph = new MakeGraph(
+                findNode[0].getMapPointGeoCoord().latitude, findNode[0].getMapPointGeoCoord().longitude,
+                findNode[1].getMapPointGeoCoord().latitude, findNode[1].getMapPointGeoCoord().longitude);
+        jeju_node = makeGraph.init();
+
         //getDistance(jeju_link);
-        int i=0, j=0;
-        float min=0;
+        int i = 0, j = 0;
+        float smin = 0, emin = 0;
         float weight = 0;
-        int minIndex=0;
 
-        /*float[] minWeight = new float[jeju_node.size()];
-        for(i=0; i<jeju_node.size(); i++) {
-            Location locationS = new Location("point A");
-            locationS.setLatitude(findNode[0].getMapPointGeoCoord().latitude);
-            locationS.setLongitude(findNode[0].getMapPointGeoCoord().longitude);
 
-            Location locationN = new Location("point B");
-            locationN.setLatitude(jeju_node.get(i).latitude);
-            locationN.setLongitude(jeju_node.get(i).longitude);
+        float[] minSPointWeight = new float[jeju_node.size()];
+        float[] minEPointWeight = new float[jeju_node.size()];
+        for(i = 0; i < jeju_node.size(); i++) {
+            Location locationSP = new Location("point A");
+            locationSP.setLatitude(findNode[0].getMapPointGeoCoord().latitude);
+            locationSP.setLongitude(findNode[0].getMapPointGeoCoord().longitude);
 
-            minWeight[i] = locationS.distanceTo(locationN);
+            Location locationEP = new Location("point B");
+            locationEP.setLatitude(findNode[1].getMapPointGeoCoord().latitude);
+            locationEP.setLatitude(findNode[1].getMapPointGeoCoord().longitude);
 
+            Location locationN = new Location("point C");
+            locationN.setLatitude(jeju_node.get(i).lat);
+            locationN.setLongitude(jeju_node.get(i).lng);
+
+
+            minSPointWeight[i] = locationSP.distanceTo(locationN);
+            minEPointWeight[i] = locationEP.distanceTo(locationN);
         }
-        min = minWeight[0];
-        for(j=0; j<i; j++){
-            if(min>minWeight[j]) {
-                min = minWeight[j];
-                minIndex = j;
+        smin = minSPointWeight[0];
+        emin = minEPointWeight[0];
+        for(j = 0; j < i; j++){
+            if(smin>minSPointWeight[j]) {
+                smin = minSPointWeight[j];
+                sIndex = j;
+            }
+            if(emin>minEPointWeight[j]) {
+                emin = minEPointWeight[j];
+                eIndex = j;
             }
         }
-        Log.d("NumberOfNodes", " : "+jeju_node.size());
-        Log.d("NumberOfLinks", ""+jeju_link.size());
-        Log.d("LinkGeo", jeju_link.get(0).linkLineLat+", "+jeju_link.get(0).linkLineLng);
+
         MapPolyline polyline = new MapPolyline();
+        MapPolyline polyline2 = new MapPolyline();
         polyline.setLineColor(Color.argb(128, 255, 255, 0));
+        polyline2.setLineColor(Color.argb(128, 255, 255, 0));
 
         polyline.addPoint(MapPoint.mapPointWithGeoCoord(findNode[0].getMapPointGeoCoord().latitude, findNode[0].getMapPointGeoCoord().longitude));
-        polyline.addPoint(MapPoint.mapPointWithGeoCoord(jeju_node.get(minIndex).latitude, jeju_node.get(minIndex).longitude));
+        polyline.addPoint(MapPoint.mapPointWithGeoCoord(jeju_node.get(sIndex).lat, jeju_node.get(sIndex).lng));
         mapView.addPolyline(polyline);
-        //MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
-        //int padding = 100;
-        //mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding));
 
-            MapPolyline polyline2 = new MapPolyline();
-            polyline2.setLineColor(Color.argb(128, 0, 255, 255));
-            polyline2.addPoint(MapPoint.mapPointWithGeoCoord(jeju_link.get(0).linkLineLat, jeju_link.get(0).linkLineLng));
-            polyline2.addPoint(MapPoint.mapPointWithGeoCoord(jeju_link.get(0).linkLineLat2, jeju_link.get(0).linkLineLng2));
-            mapView.addPolyline(polyline2);
-            */
+        polyline2.addPoint(MapPoint.mapPointWithGeoCoord(findNode[1].getMapPointGeoCoord().latitude, findNode[1].getMapPointGeoCoord().longitude));
+        polyline2.addPoint(MapPoint.mapPointWithGeoCoord(jeju_node.get(eIndex).lat, jeju_node.get(eIndex).lng));
+        mapView.addPolyline(polyline2);
+
+        //MapPointBounds mapPointBounds = new MapPointBounds(polyline.getMapPoints());
+        //int padding = 10;
+        //mapView.moveCamera(CameraUpdateFactory.newMapPointBounds(mapPointBounds, padding));
+    }
+    public void AstarAlgorithm(int sIndex, double g_Score) {
+        NodeLatLng startNode = jeju_node.get(sIndex);
+        NodeLatLng endNode;
+        String[] tmp = new String[startNode.getLink().size()];
+        double min;
+
+
+        for(int len = 0; len < tmp.length; len++){  //startNode에 연결된 링크만 임시로 저장
+            //만약 startNode.getLink().get(len).getNode().node_id가 closed배열에 있으면 continue;
+            if(closed.contains(startNode.getLink().get(len).getNextNode().node_id))
+                continue;
+            tmp[len] = startNode.getLink().get(len).getNextNode().node_id;
+        }
+
+        //startNode.getLink().get(i).getNode().node_id;
+        for(int i = 0; i < jeju_node.size(); i++) {
+            if(i == eIndex)
+                break;
+            for(int j = 0; j < tmp.length; j++) {
+                if (jeju_node.get(i).node_id == tmp[j]) {
+                    startNode = jeju_node.get(sIndex);
+                    endNode = jeju_node.get(i);
+                    Location locationS = new Location("point A");
+                    Location locationE = new Location("point B");
+                    locationS.setLatitude(startNode.lat);
+                    locationS.setLongitude(startNode.lng);
+                    locationE.setLatitude(endNode.lat);
+                    locationE.setLongitude(endNode.lng);
+
+                    listStack = new ListStack();
+                    listStack.node_id = endNode.node_id;
+                    listStack.GScore = g_Score + startNode.getLink().get(j).distance; //시작점부터 해당 노드까지의 거리 값. 시작노드부터의 거리로 수정해야함.
+                    listStack.HScore = locationS.distanceTo(locationE);
+                    listStack.FScore = listStack.GScore + listStack.HScore;
+
+                    listStack.parent = jeju_node.get(sIndex).node_id;//.getLink().get(i).getNode().node_id;
+                    //closed[i] = listStack;
+                    //push로 데이터를 넣기 전에 스택에서 같은 노드의 값이 있다면 G값 비교해서 작은것으로 바꿔줌.
+                    //open[k++] = listStack;  //링크드리스트 생성해서 push로 저장.
+
+                    if(open.contains(listStack.node_id)) {
+                        for (int k = 0; k < open.size(); k++) {
+                            if (open.get(k).node_id == listStack.node_id) {
+                                if (open.get(k).GScore > listStack.GScore) {
+                                    open.remove(k);
+                                    open.add(k, listStack);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        open.push(listStack);
+                    }
+                }
+            }
+        }
+        int index = 0;
+        min = open.get(0).FScore;
+        for(int length = 1; length < open.size(); length++){
+            if( min > open.get(length).FScore){
+                min = open.get(length).FScore;
+                index = length;
+            }
+        }
+        closed.push(open.get(index));
+        open.remove(index);
+        //LinkedList<String> l = new LinkedList<>();
+        // open배열에 있는 F값중 가장 작은 인덱스를 closed배열에 저장. (open배열 해당 인덱스get해서 closed에 push 후 해당 인덱스remove)
+        // closed[0]있으므로 인덱스 1부터 시작.
+        //다음 호출할 때의 sIndex는 closed에 저장된 노드의 인덱스로. (closed 마지막 인덱스)
+        if(open.get(index).node_id != jeju_node.get(eIndex).node_id)
+            AstarAlgorithm(index , listStack.GScore);
+        //return
     }
     public void geoCoding(){
         final Geocoder geocoder = new Geocoder(this);
@@ -261,7 +357,9 @@ public class MapActivity extends FragmentActivity implements MapView.MapViewEven
             isLongTouched = false;
             mapView.addPOIItem(ep_marker);
             findNode[1] = mapPoint;
-            startFindRoute();
+            //startFindRoute();
+            SearchRoute searchRoute = new SearchRoute();
+            searchRoute.execute();
         }
     }
 

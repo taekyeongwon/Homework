@@ -1,5 +1,6 @@
 package com.example.tkw33.homework3modify;
 
+import android.location.Location;
 import android.util.Log;
 
 import com.example.tkw33.homework3modify.GeoJson.LatLng;
@@ -175,6 +176,8 @@ public class Remote {
         double dist = 0.0;
         String _id, lat, lng;
         ArrayList<LatLng> list;
+        Location locationS = new Location("point A");
+        Location locationE = new Location("point B");
         try {
             JSONObject jsonObject = new JSONObject(data);
             JSONObject response = jsonObject.getJSONObject("response");
@@ -203,8 +206,16 @@ public class Remote {
                     }
                     for (int k = 0; k < list.size() - 1; k++) {
 
-                        dist += calcDistance(list.get(k).latitude, list.get(k).longitude,
-                                list.get(k + 1).latitude, list.get(k + 1).longitude);
+                        locationS.setLatitude(list.get(k).latitude);
+                        locationS.setLongitude(list.get(k).longitude);
+
+
+                        locationE.setLatitude(list.get(k + 1).latitude);
+                        locationE.setLongitude(list.get(k + 1).longitude);
+
+                        dist += locationS.distanceTo(locationE);
+                        //dist += calcDistance(list.get(k).latitude, list.get(k).longitude,
+                                //list.get(k + 1).latitude, list.get(k + 1).longitude);
                     }
                     LinkLatLng linkLatLng = new LinkLatLng(_id, list, dist);
                     LinkLatLng.llist.add(linkLatLng);
@@ -232,7 +243,7 @@ public class Remote {
             je.printStackTrace();
         }
     }
-    public static double calcDistance(double lat1, double lng1, double lat2, double lng2){
+    /*public static double calcDistance(double lat1, double lng1, double lat2, double lng2){
         double EARTH_R, Rad, radLat1, radLat2, radDist;
         double distance, ret;
 
@@ -246,9 +257,9 @@ public class Remote {
         distance = distance + Math.cos(radLat1) * Math.cos(radLat2) * Math.cos(radDist);
         ret = EARTH_R * Math.acos(distance);
 
-        double rslt = Math.round(Math.round(ret) / 1000);
-        if(rslt == 0)
-            rslt = Math.round(ret);
+        //double rslt = Math.round(Math.round(ret) / 1000);
+        //if(rslt == 0)
+            double rslt = Math.round(ret);
         return rslt;
-    }
+    }*/
 }

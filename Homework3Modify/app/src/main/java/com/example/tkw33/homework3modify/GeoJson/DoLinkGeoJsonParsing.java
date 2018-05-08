@@ -81,9 +81,9 @@ public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
 
             //LinkLatLng.llist = new ArrayList<>();
             //list = new ArrayList<>();
-            double dist = 0.0;
-            long start, end;
-            start = System.currentTimeMillis();
+            //double dist = 0.0;
+            //long start, end;
+            //start = System.currentTimeMillis();
             //while(loop<=p && isCancelled() == false) {
             String dirPath = Environment.getExternalStorageDirectory() + "/Link";
             file = new File(dirPath);
@@ -154,8 +154,8 @@ public class DoLinkGeoJsonParsing extends AsyncTask<Integer, Integer, Void> {
             publishProgress(loop);
 
             //}
-            end = System.currentTimeMillis();
-            Log.d("DOWNLOADING LINKTIME : ", "" + (end - start) / 1000.0);
+            //end = System.currentTimeMillis();
+            //Log.d("DOWNLOADING LINKTIME : ", "" + (end - start) / 1000.0);
             //((MapActivity) MapActivity.mContext).GeoJsonResultOfLink(llist);
         }
         return null;

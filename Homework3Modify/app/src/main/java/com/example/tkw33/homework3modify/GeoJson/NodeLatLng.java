@@ -9,14 +9,13 @@ public class NodeLatLng {
     //public String link_tail;
     //public String link_head;
     public ArrayList<LinkLatLng> link;
-    //public NodeLatLng(){}
+    public NodeLatLng() {
+
+    }
     public NodeLatLng(String node_id, double lat, double lng){
         this.node_id = node_id;
         this.lat = lat;
         this.lng = lng;
-
-        //this.link = new ArrayList<>();
-        //this.link = link;
     }
     public static ArrayList<NodeLatLng> nlist = new ArrayList<>();
     public void setLink(ArrayList<LinkLatLng> link){

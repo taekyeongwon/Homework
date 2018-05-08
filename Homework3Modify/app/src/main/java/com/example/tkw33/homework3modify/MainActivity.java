@@ -63,48 +63,44 @@ public class MainActivity extends ListActivity {
                 listView.setSelectionFromTop(0, 0);
             }
         });
+        //myTask();
         download_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //final String dirPath = Environment.getExternalStorageDirectory()+"/test";
                 //final File file = new File(dirPath);
-//파일이 없고 granted이면//
-                    if (/*dbHelper == null && */granted) {
-                        //dbHelper = new DBHelper(MainActivity.this,
-                            //    "homework3.db",
-                          //      null, 1);
-                        //database = dbHelper.getWritableDatabase();
-                        for(int i = 1; i<=30; i++){
-                            DoNodeGeoJsonParsing geoJsonParsing = new DoNodeGeoJsonParsing(MainActivity.this, new GeoJsonCallBack() {
-                                @Override
-                                public void onFinish(int loop) {
-                                    if (loop == 30){
-                                        for (int i = 1; i<=86; i++) {
-                                            DoLinkGeoJsonParsing geoJsonParsing = new DoLinkGeoJsonParsing(MainActivity.this, new GeoJsonCallBack() {
-                                                @Override
-                                                public void onFinish(int loop) {
-                                                    if (loop == 86) {
-                                                        MakeGraph mGraph = new MakeGraph();
-                                                        Toast.makeText(MainActivity.this, "done.", Toast.LENGTH_SHORT).show();
-                                                    }
-                                                }
-                                            });
-                                            geoJsonParsing.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, i);
-                                        }
-                                    }
-                                }
-                            });
-                            geoJsonParsing.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, i);
-                        }
-                        //for(int i=1; i<=86; i++) {
-                            //geoJsonParsing.execute(86);
-                        //}
-                    }
+                    myTask();
                     }
 
         });
     }
 
+    public void myTask(){
+        if (granted) {
+            for(int i = 1; i<=30; i++){
+                DoNodeGeoJsonParsing geoJsonParsing = new DoNodeGeoJsonParsing(MainActivity.this, new GeoJsonCallBack() {
+                    @Override
+                    public void onFinish(int loop) {
+                        if (loop == 30){
+                            for (int i = 1; i<=86; i++) {
+                                DoLinkGeoJsonParsing geoJsonParsing = new DoLinkGeoJsonParsing(MainActivity.this, new GeoJsonCallBack() {
+                                    @Override
+                                    public void onFinish(int loop) {
+                                        if (loop == 86) {
+                                            //MakeGraph mGraph = new MakeGraph();
+                                            Toast.makeText(MainActivity.this, "done.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
+                                geoJsonParsing.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, i);
+                            }
+                        }
+                    }
+                });
+                geoJsonParsing.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, i);
+            }
+        }
+    }
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         JsonItemData jsonItemData = jsonItemArray[position];
